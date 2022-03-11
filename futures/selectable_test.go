@@ -27,7 +27,7 @@ import (
 )
 
 func TestSelectableGetResult(t *testing.T) {
-	f := NewSelectable()
+	f := NewSelectable[interface{}]()
 	var result interface{}
 	var err error
 	var wg sync.WaitGroup
@@ -51,7 +51,7 @@ func TestSelectableGetResult(t *testing.T) {
 }
 
 func TestSelectableSetError(t *testing.T) {
-	f := NewSelectable()
+	f := NewSelectable[interface{}]()
 	select {
 	case <-f.WaitChan():
 	case <-time.After(0):
@@ -72,7 +72,7 @@ func BenchmarkSelectable(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		wg.Add(1)
-		f := NewSelectable()
+		f := NewSelectable[interface{}]()
 		go func() {
 			select {
 			case <-f.WaitChan():

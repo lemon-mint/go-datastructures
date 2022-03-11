@@ -31,9 +31,9 @@ var ErrFutureCanceled = errors.New("future canceled")
 // or by selecting/fetching from `f.WaitChan()`, which is closed when future
 // fulfilled.
 // Selectable contains sync.Mutex, so it is not movable/copyable.
-type Selectable struct {
+type Selectable[T any] struct {
 	m      sync.Mutex
-	val    interface{}
+	val    T
 	err    error
 	wait   chan struct{}
 	filled uint32
@@ -42,11 +42,11 @@ type Selectable struct {
 // NewSelectable returns new selectable future.
 // Note: this method is for backward compatibility.
 // You may allocate it directly on stack or embedding into larger structure
-func NewSelectable() *Selectable {
-	return &Selectable{}
+func NewSelectable[T any]() *Selectable[T] {
+	return &Selectable[T]{}
 }
 
-func (f *Selectable) wchan() <-chan struct{} {
+func (f *Selectable[T]) wchan() <-chan struct{} {
 	f.m.Lock()
 	if f.wait == nil {
 		f.wait = make(chan struct{})
@@ -57,7 +57,7 @@ func (f *Selectable) wchan() <-chan struct{} {
 }
 
 // WaitChan returns channel, which is closed when future is fullfilled.
-func (f *Selectable) WaitChan() <-chan struct{} {
+func (f *Selectable[T]) WaitChan() <-chan struct{} {
 	if atomic.LoadUint32(&f.filled) == 1 {
 		return closed
 	}
@@ -66,7 +66,7 @@ func (f *Selectable) WaitChan() <-chan struct{} {
 
 // GetResult waits for future to be fullfilled and returns value or error,
 // whatever is set first
-func (f *Selectable) GetResult() (interface{}, error) {
+func (f *Selectable[T]) GetResult() (T, error) {
 	if atomic.LoadUint32(&f.filled) == 0 {
 		<-f.wchan()
 	}
@@ -75,7 +75,7 @@ func (f *Selectable) GetResult() (interface{}, error) {
 
 // Fill sets value for future, if it were not already fullfilled
 // Returns error, if it were already set to future.
-func (f *Selectable) Fill(v interface{}, e error) error {
+func (f *Selectable[T]) Fill(v T, e error) error {
 	f.m.Lock()
 	if f.filled == 0 {
 		f.val = v
@@ -92,17 +92,18 @@ func (f *Selectable) Fill(v interface{}, e error) error {
 }
 
 // SetValue is alias for Fill(v, nil)
-func (f *Selectable) SetValue(v interface{}) error {
+func (f *Selectable[T]) SetValue(v T) error {
 	return f.Fill(v, nil)
 }
 
 // SetError is alias for Fill(nil, e)
-func (f *Selectable) SetError(e error) {
-	f.Fill(nil, e)
+func (f *Selectable[T]) SetError(e error) {
+	var zero T
+	f.Fill(zero, e)
 }
 
 // Cancel is alias for SetError(ErrFutureCanceled)
-func (f *Selectable) Cancel() {
+func (f *Selectable[T]) Cancel() {
 	f.SetError(ErrFutureCanceled)
 }
 
