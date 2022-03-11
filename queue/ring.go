@@ -36,12 +36,12 @@ func roundUp(v uint64) uint64 {
 	return v
 }
 
-type node struct {
+type node[T any] struct {
 	position uint64
-	data     interface{}
+	data     T
 }
 
-type nodes []node
+type nodes[T any] []node[T]
 
 // RingBuffer is a MPMC buffer that achieves threadsafety with CAS operations
 // only.  A put on full or get on empty call will block until an item
@@ -49,7 +49,7 @@ type nodes []node
 // any blocked threads with an error.  This buffer is similar to the buffer
 // described here: http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
 // with some minor additions.
-type RingBuffer struct {
+type RingBuffer[T any] struct {
 	_padding0      [8]uint64
 	queue          uint64
 	_padding1      [8]uint64
@@ -57,14 +57,14 @@ type RingBuffer struct {
 	_padding2      [8]uint64
 	mask, disposed uint64
 	_padding3      [8]uint64
-	nodes          nodes
+	nodes          nodes[T]
 }
 
-func (rb *RingBuffer) init(size uint64) {
+func (rb *RingBuffer[T]) init(size uint64) {
 	size = roundUp(size)
-	rb.nodes = make(nodes, size)
+	rb.nodes = make(nodes[T], size)
 	for i := uint64(0); i < size; i++ {
-		rb.nodes[i] = node{position: i}
+		rb.nodes[i] = node[T]{position: i}
 	}
 	rb.mask = size - 1 // so we don't have to do this with every put/get operation
 }
@@ -72,7 +72,7 @@ func (rb *RingBuffer) init(size uint64) {
 // Put adds the provided item to the queue.  If the queue is full, this
 // call will block until an item is added to the queue or Dispose is called
 // on the queue.  An error will be returned if the queue is disposed.
-func (rb *RingBuffer) Put(item interface{}) error {
+func (rb *RingBuffer[T]) Put(item T) error {
 	_, err := rb.put(item, false)
 	return err
 }
@@ -80,12 +80,12 @@ func (rb *RingBuffer) Put(item interface{}) error {
 // Offer adds the provided item to the queue if there is space.  If the queue
 // is full, this call will return false.  An error will be returned if the
 // queue is disposed.
-func (rb *RingBuffer) Offer(item interface{}) (bool, error) {
+func (rb *RingBuffer[T]) Offer(item T) (bool, error) {
 	return rb.put(item, true)
 }
 
-func (rb *RingBuffer) put(item interface{}, offer bool) (bool, error) {
-	var n *node
+func (rb *RingBuffer[T]) put(item T, offer bool) (bool, error) {
+	var n *node[T]
 	pos := atomic.LoadUint64(&rb.queue)
 L:
 	for {
@@ -122,7 +122,7 @@ L:
 // if the queue is empty.  This call will unblock when an item is added
 // to the queue or Dispose is called on the queue.  An error will be returned
 // if the queue is disposed.
-func (rb *RingBuffer) Get() (interface{}, error) {
+func (rb *RingBuffer[T]) Get() (T, error) {
 	return rb.Poll(0)
 }
 
@@ -131,19 +131,20 @@ func (rb *RingBuffer) Get() (interface{}, error) {
 // to the queue, Dispose is called on the queue, or the timeout is reached. An
 // error will be returned if the queue is disposed or a timeout occurs. A
 // non-positive timeout will block indefinitely.
-func (rb *RingBuffer) Poll(timeout time.Duration) (interface{}, error) {
+func (rb *RingBuffer[T]) Poll(timeout time.Duration) (T, error) {
 	var (
-		n     *node
+		n     *node[T]
 		pos   = atomic.LoadUint64(&rb.dequeue)
 		start time.Time
 	)
 	if timeout > 0 {
 		start = time.Now()
 	}
+	var zero T
 L:
 	for {
 		if atomic.LoadUint64(&rb.disposed) == 1 {
-			return nil, ErrDisposed
+			return zero, ErrDisposed
 		}
 
 		n = &rb.nodes[pos&rb.mask]
@@ -160,44 +161,44 @@ L:
 		}
 
 		if timeout > 0 && time.Since(start) >= timeout {
-			return nil, ErrTimeout
+			return zero, ErrTimeout
 		}
 
 		runtime.Gosched() // free up the cpu before the next iteration
 	}
 	data := n.data
-	n.data = nil
+	n.data = zero
 	atomic.StoreUint64(&n.position, pos+rb.mask+1)
 	return data, nil
 }
 
 // Len returns the number of items in the queue.
-func (rb *RingBuffer) Len() uint64 {
+func (rb *RingBuffer[T]) Len() uint64 {
 	return atomic.LoadUint64(&rb.queue) - atomic.LoadUint64(&rb.dequeue)
 }
 
 // Cap returns the capacity of this ring buffer.
-func (rb *RingBuffer) Cap() uint64 {
+func (rb *RingBuffer[T]) Cap() uint64 {
 	return uint64(len(rb.nodes))
 }
 
 // Dispose will dispose of this queue and free any blocked threads
 // in the Put and/or Get methods.  Calling those methods on a disposed
 // queue will return an error.
-func (rb *RingBuffer) Dispose() {
+func (rb *RingBuffer[T]) Dispose() {
 	atomic.CompareAndSwapUint64(&rb.disposed, 0, 1)
 }
 
 // IsDisposed will return a bool indicating if this queue has been
 // disposed.
-func (rb *RingBuffer) IsDisposed() bool {
+func (rb *RingBuffer[T]) IsDisposed() bool {
 	return atomic.LoadUint64(&rb.disposed) == 1
 }
 
 // NewRingBuffer will allocate, initialize, and return a ring buffer
 // with the specified size.
-func NewRingBuffer(size uint64) *RingBuffer {
-	rb := &RingBuffer{}
+func NewRingBuffer[T any](size uint64) *RingBuffer[T] {
+	rb := &RingBuffer[T]{}
 	rb.init(size)
 	return rb
 }

@@ -26,7 +26,7 @@ import (
 )
 
 func TestRingInsert(t *testing.T) {
-	rb := NewRingBuffer(5)
+	rb := NewRingBuffer[int](5)
 	assert.Equal(t, uint64(8), rb.Cap())
 
 	err := rb.Put(5)
@@ -43,7 +43,7 @@ func TestRingInsert(t *testing.T) {
 }
 
 func TestRingMultipleInserts(t *testing.T) {
-	rb := NewRingBuffer(5)
+	rb := NewRingBuffer[int](5)
 
 	err := rb.Put(1)
 	if !assert.Nil(t, err) {
@@ -71,7 +71,7 @@ func TestRingMultipleInserts(t *testing.T) {
 }
 
 func TestIntertwinedGetAndPut(t *testing.T) {
-	rb := NewRingBuffer(5)
+	rb := NewRingBuffer[int](5)
 	err := rb.Put(1)
 	if !assert.Nil(t, err) {
 		return
@@ -98,7 +98,7 @@ func TestIntertwinedGetAndPut(t *testing.T) {
 }
 
 func TestPutToFull(t *testing.T) {
-	rb := NewRingBuffer(3)
+	rb := NewRingBuffer[int](3)
 
 	for i := 0; i < 4; i++ {
 		err := rb.Put(i)
@@ -130,7 +130,7 @@ func TestPutToFull(t *testing.T) {
 }
 
 func TestOffer(t *testing.T) {
-	rb := NewRingBuffer(2)
+	rb := NewRingBuffer[string](2)
 
 	ok, err := rb.Offer("foo")
 	assert.True(t, ok)
@@ -151,7 +151,7 @@ func TestOffer(t *testing.T) {
 }
 
 func TestRingGetEmpty(t *testing.T) {
-	rb := NewRingBuffer(3)
+	rb := NewRingBuffer[int](3)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -178,14 +178,14 @@ func TestRingGetEmpty(t *testing.T) {
 }
 
 func TestRingPollEmpty(t *testing.T) {
-	rb := NewRingBuffer(3)
+	rb := NewRingBuffer[int](3)
 
 	_, err := rb.Poll(1)
 	assert.Equal(t, ErrTimeout, err)
 }
 
 func TestRingPoll(t *testing.T) {
-	rb := NewRingBuffer(10)
+	rb := NewRingBuffer[string](10)
 
 	// should be able to Poll() before anything is present, without breaking future Puts
 	rb.Poll(time.Millisecond)
@@ -226,7 +226,7 @@ func TestRingPoll(t *testing.T) {
 }
 
 func TestRingLen(t *testing.T) {
-	rb := NewRingBuffer(4)
+	rb := NewRingBuffer[int](4)
 	assert.Equal(t, uint64(0), rb.Len())
 
 	rb.Put(1)
@@ -248,7 +248,7 @@ func TestDisposeOnGet(t *testing.T) {
 	numThreads := 8
 	var wg sync.WaitGroup
 	wg.Add(numThreads)
-	rb := NewRingBuffer(4)
+	rb := NewRingBuffer[int](4)
 	var spunUp sync.WaitGroup
 	spunUp.Add(numThreads)
 
@@ -272,7 +272,7 @@ func TestDisposeOnPut(t *testing.T) {
 	numThreads := 8
 	var wg sync.WaitGroup
 	wg.Add(numThreads)
-	rb := NewRingBuffer(4)
+	rb := NewRingBuffer[int](4)
 	var spunUp sync.WaitGroup
 	spunUp.Add(numThreads)
 
@@ -301,7 +301,7 @@ func TestDisposeOnPut(t *testing.T) {
 }
 
 func BenchmarkRBLifeCycle(b *testing.B) {
-	rb := NewRingBuffer(64)
+	rb := NewRingBuffer[int](64)
 
 	counter := uint64(0)
 	var wg sync.WaitGroup
@@ -329,7 +329,7 @@ func BenchmarkRBLifeCycle(b *testing.B) {
 }
 
 func BenchmarkRBLifeCycleContention(b *testing.B) {
-	rb := NewRingBuffer(64)
+	rb := NewRingBuffer[int](64)
 
 	var wwg sync.WaitGroup
 	var rwg sync.WaitGroup
@@ -367,7 +367,7 @@ func BenchmarkRBLifeCycleContention(b *testing.B) {
 }
 
 func BenchmarkRBPut(b *testing.B) {
-	rb := NewRingBuffer(uint64(b.N))
+	rb := NewRingBuffer[int](uint64(b.N))
 
 	b.ResetTimer()
 
@@ -384,7 +384,7 @@ func BenchmarkRBPut(b *testing.B) {
 }
 
 func BenchmarkRBGet(b *testing.B) {
-	rb := NewRingBuffer(uint64(b.N))
+	rb := NewRingBuffer[int](uint64(b.N))
 
 	for i := 0; i < b.N; i++ {
 		rb.Offer(i)
@@ -399,6 +399,6 @@ func BenchmarkRBGet(b *testing.B) {
 
 func BenchmarkRBAllocation(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		NewRingBuffer(1024)
+		NewRingBuffer[struct{}](1024)
 	}
 }
