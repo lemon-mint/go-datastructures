@@ -26,7 +26,7 @@ import (
 )
 
 func TestPut(t *testing.T) {
-	q := New(10)
+	q := New[string](10)
 
 	q.Put(`test`)
 	assert.Equal(t, int64(1), q.Len())
@@ -50,7 +50,7 @@ func TestPut(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	q := New(10)
+	q := New[string](10)
 
 	q.Put(`test`)
 	result, err := q.Get(2)
@@ -83,7 +83,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestPoll(t *testing.T) {
-	q := New(10)
+	q := New[string](10)
 
 	// should be able to Poll() before anything is present, without breaking future Puts
 	q.Poll(1, time.Millisecond)
@@ -126,7 +126,7 @@ func TestPoll(t *testing.T) {
 }
 
 func TestPollNoMemoryLeak(t *testing.T) {
-	q := New(0)
+	q := New[string](0)
 
 	assert.Len(t, q.waiters, 0)
 
@@ -138,7 +138,7 @@ func TestPollNoMemoryLeak(t *testing.T) {
 }
 
 func TestAddEmptyPut(t *testing.T) {
-	q := New(10)
+	q := New[string](10)
 
 	q.Put()
 
@@ -148,7 +148,7 @@ func TestAddEmptyPut(t *testing.T) {
 }
 
 func TestGetNonPositiveNumber(t *testing.T) {
-	q := New(10)
+	q := New[string](10)
 
 	q.Put(`test`)
 	result, err := q.Get(0)
@@ -162,7 +162,7 @@ func TestGetNonPositiveNumber(t *testing.T) {
 }
 
 func TestEmpty(t *testing.T) {
-	q := New(10)
+	q := New[string](10)
 
 	if !q.Empty() {
 		t.Errorf(`Expected empty queue.`)
@@ -175,7 +175,7 @@ func TestEmpty(t *testing.T) {
 }
 
 func TestGetEmpty(t *testing.T) {
-	q := New(10)
+	q := New[string](10)
 
 	go func() {
 		q.Put(`a`)
@@ -191,7 +191,7 @@ func TestGetEmpty(t *testing.T) {
 }
 
 func TestMultipleGetEmpty(t *testing.T) {
-	q := New(10)
+	q := New[interface{}](10)
 	var wg sync.WaitGroup
 	wg.Add(2)
 	results := make([][]interface{}, 2)
@@ -227,13 +227,13 @@ func TestMultipleGetEmpty(t *testing.T) {
 
 func TestDispose(t *testing.T) {
 	// when the queue is empty
-	q := New(10)
+	q := New[interface{}](10)
 	itemsDisposed := q.Dispose()
 
 	assert.Empty(t, itemsDisposed)
 
 	// when the queue is not empty
-	q = New(10)
+	q = New[interface{}](10)
 	q.Put(`1`)
 	itemsDisposed = q.Dispose()
 
@@ -246,7 +246,7 @@ func TestDispose(t *testing.T) {
 }
 
 func TestEmptyGetWithDispose(t *testing.T) {
-	q := New(10)
+	q := New[interface{}](10)
 	var wg sync.WaitGroup
 	wg.Add(1)
 
@@ -269,7 +269,7 @@ func TestEmptyGetWithDispose(t *testing.T) {
 }
 
 func TestDisposeAfterEmptyPoll(t *testing.T) {
-	q := New(10)
+	q := New[interface{}](10)
 
 	_, err := q.Poll(1, time.Millisecond)
 	assert.IsType(t, ErrTimeout, err)
@@ -282,7 +282,7 @@ func TestDisposeAfterEmptyPoll(t *testing.T) {
 }
 
 func TestGetPutDisposed(t *testing.T) {
-	q := New(10)
+	q := New[interface{}](10)
 
 	q.Dispose()
 
@@ -294,7 +294,7 @@ func TestGetPutDisposed(t *testing.T) {
 }
 
 func BenchmarkQueue(b *testing.B) {
-	q := New(int64(b.N))
+	q := New[string](int64(b.N))
 	var wg sync.WaitGroup
 	wg.Add(1)
 	i := 0
@@ -342,7 +342,7 @@ func BenchmarkChannel(b *testing.B) {
 }
 
 func TestPeek(t *testing.T) {
-	q := New(10)
+	q := New[string](10)
 	q.Put(`a`)
 	q.Put(`b`)
 	q.Put(`c`)
@@ -359,7 +359,7 @@ func TestPeek(t *testing.T) {
 }
 
 func TestPeekOnDisposedQueue(t *testing.T) {
-	q := New(10)
+	q := New[interface{}](10)
 	q.Dispose()
 	result, err := q.Peek()
 
@@ -368,7 +368,7 @@ func TestPeekOnDisposedQueue(t *testing.T) {
 }
 
 func TestTakeUntil(t *testing.T) {
-	q := New(10)
+	q := New[interface{}](10)
 	q.Put(`a`, `b`, `c`)
 	result, err := q.TakeUntil(func(item interface{}) bool {
 		return item != `c`
@@ -383,7 +383,7 @@ func TestTakeUntil(t *testing.T) {
 }
 
 func TestTakeUntilEmptyQueue(t *testing.T) {
-	q := New(10)
+	q := New[interface{}](10)
 	result, err := q.TakeUntil(func(item interface{}) bool {
 		return item != `c`
 	})
@@ -397,7 +397,7 @@ func TestTakeUntilEmptyQueue(t *testing.T) {
 }
 
 func TestTakeUntilThenGet(t *testing.T) {
-	q := New(10)
+	q := New[interface{}](10)
 	q.Put(`a`, `b`, `c`)
 	takeItems, _ := q.TakeUntil(func(item interface{}) bool {
 		return item != `c`
@@ -409,7 +409,7 @@ func TestTakeUntilThenGet(t *testing.T) {
 }
 
 func TestTakeUntilNoMatches(t *testing.T) {
-	q := New(10)
+	q := New[interface{}](10)
 	q.Put(`a`, `b`, `c`)
 	takeItems, _ := q.TakeUntil(func(item interface{}) bool {
 		return item != `a`
@@ -421,7 +421,7 @@ func TestTakeUntilNoMatches(t *testing.T) {
 }
 
 func TestTakeUntilOnDisposedQueue(t *testing.T) {
-	q := New(10)
+	q := New[interface{}](10)
 	q.Dispose()
 	result, err := q.TakeUntil(func(item interface{}) bool {
 		return true
@@ -494,7 +494,7 @@ func TestWaiters(t *testing.T) {
 }
 
 func TestExecuteInParallel(t *testing.T) {
-	q := New(10)
+	q := New[interface{}](10)
 	for i := 0; i < 10; i++ {
 		q.Put(i)
 	}
@@ -511,7 +511,7 @@ func TestExecuteInParallel(t *testing.T) {
 }
 
 func TestExecuteInParallelEmptyQueue(t *testing.T) {
-	q := New(1)
+	q := New[interface{}](1)
 
 	// basically just ensuring we don't deadlock here
 	ExecuteInParallel(q, func(interface{}) {
@@ -522,10 +522,10 @@ func TestExecuteInParallelEmptyQueue(t *testing.T) {
 func BenchmarkQueuePut(b *testing.B) {
 	numItems := int64(1000)
 
-	qs := make([]*Queue, 0, b.N)
+	qs := make([]*Queue[int64], 0, b.N)
 
 	for i := 0; i < b.N; i++ {
-		q := New(10)
+		q := New[int64](10)
 		qs = append(qs, q)
 	}
 
@@ -541,10 +541,10 @@ func BenchmarkQueuePut(b *testing.B) {
 func BenchmarkQueueGet(b *testing.B) {
 	numItems := int64(1000)
 
-	qs := make([]*Queue, 0, b.N)
+	qs := make([]*Queue[int64], 0, b.N)
 
 	for i := 0; i < b.N; i++ {
-		q := New(numItems)
+		q := New[int64](numItems)
 		for j := int64(0); j < numItems; j++ {
 			q.Put(j)
 		}
@@ -564,10 +564,10 @@ func BenchmarkQueueGet(b *testing.B) {
 func BenchmarkQueuePoll(b *testing.B) {
 	numItems := int64(1000)
 
-	qs := make([]*Queue, 0, b.N)
+	qs := make([]*Queue[int64], 0, b.N)
 
 	for i := 0; i < b.N; i++ {
-		q := New(numItems)
+		q := New[int64](numItems)
 		for j := int64(0); j < numItems; j++ {
 			q.Put(j)
 		}
@@ -586,10 +586,10 @@ func BenchmarkQueuePoll(b *testing.B) {
 func BenchmarkExecuteInParallel(b *testing.B) {
 	numItems := int64(1000)
 
-	qs := make([]*Queue, 0, b.N)
+	qs := make([]*Queue[interface{}], 0, b.N)
 
 	for i := 0; i < b.N; i++ {
-		q := New(numItems)
+		q := New[interface{}](numItems)
 		for j := int64(0); j < numItems; j++ {
 			q.Put(j)
 		}

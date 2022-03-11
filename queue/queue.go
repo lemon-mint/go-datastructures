@@ -91,10 +91,10 @@ func (w *waiters) remove(sema *sema) {
 	*w = newWs
 }
 
-type items []interface{}
+type items[T any] []T
 
-func (items *items) get(number int64) []interface{} {
-	returnItems := make([]interface{}, 0, number)
+func (items *items[T]) get(number int64) []T {
+	returnItems := make([]T, 0, number)
 	index := int64(0)
 	for i := int64(0); i < number; i++ {
 		if i >= int64(len(*items)) {
@@ -102,7 +102,8 @@ func (items *items) get(number int64) []interface{} {
 		}
 
 		returnItems = append(returnItems, (*items)[i])
-		(*items)[i] = nil
+		var zero T
+		(*items)[i] = zero
 		index++
 	}
 
@@ -110,26 +111,27 @@ func (items *items) get(number int64) []interface{} {
 	return returnItems
 }
 
-func (items *items) peek() (interface{}, bool) {
+func (items *items[T]) peek() (T, bool) {
 	length := len(*items)
 
 	if length == 0 {
-		return nil, false
+		var zero T
+		return zero, false
 	}
 
 	return (*items)[0], true
 }
 
-func (items *items) getUntil(checker func(item interface{}) bool) []interface{} {
+func (items *items[T]) getUntil(checker func(item T) bool) []T {
 	length := len(*items)
 
 	if len(*items) == 0 {
 		// returning nil here actually wraps that nil in a list
 		// of interfaces... thanks go
-		return []interface{}{}
+		return []T{}
 	}
 
-	returnItems := make([]interface{}, 0, length)
+	returnItems := make([]T, 0, length)
 	index := -1
 	for i, item := range *items {
 		if !checker(item) {
@@ -138,7 +140,8 @@ func (items *items) getUntil(checker func(item interface{}) bool) []interface{} 
 
 		returnItems = append(returnItems, item)
 		index = i
-		(*items)[i] = nil // prevent memory leak
+		var zero T
+		(*items)[i] = zero // prevent memory leak
 	}
 
 	*items = (*items)[index+1:]
@@ -159,15 +162,15 @@ func newSema() *sema {
 
 // Queue is the struct responsible for tracking the state
 // of the queue.
-type Queue struct {
+type Queue[T any] struct {
 	waiters  waiters
-	items    items
+	items    items[T]
 	lock     sync.Mutex
 	disposed bool
 }
 
 // Put will add the specified items to the queue.
-func (q *Queue) Put(items ...interface{}) error {
+func (q *Queue[T]) Put(items ...T) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -205,7 +208,7 @@ func (q *Queue) Put(items ...interface{}) error {
 // queue, get will return a number UP TO the number passed in as a
 // parameter.  If no items are in the queue, this method will pause
 // until items are added to the queue.
-func (q *Queue) Get(number int64) ([]interface{}, error) {
+func (q *Queue[T]) Get(number int64) ([]T, error) {
 	return q.Poll(number, 0)
 }
 
@@ -214,10 +217,10 @@ func (q *Queue) Get(number int64) ([]interface{}, error) {
 // items are in the queue, this method will pause until items are added to the
 // queue or the provided timeout is reached.  A non-positive timeout will block
 // until items are added.  If a timeout occurs, ErrTimeout is returned.
-func (q *Queue) Poll(number int64, timeout time.Duration) ([]interface{}, error) {
+func (q *Queue[T]) Poll(number int64, timeout time.Duration) ([]T, error) {
 	if number < 1 {
 		// thanks again go
-		return []interface{}{}, nil
+		return []T{}, nil
 	}
 
 	q.lock.Lock()
@@ -227,7 +230,7 @@ func (q *Queue) Poll(number int64, timeout time.Duration) ([]interface{}, error)
 		return nil, ErrDisposed
 	}
 
-	var items []interface{}
+	var items []T
 
 	if len(q.items) == 0 {
 		sema := newSema()
@@ -271,17 +274,19 @@ func (q *Queue) Poll(number int64, timeout time.Duration) ([]interface{}, error)
 
 // Peek returns a the first item in the queue by value
 // without modifying the queue.
-func (q *Queue) Peek() (interface{}, error) {
+func (q *Queue[T]) Peek() (T, error) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
+	var zero T
+
 	if q.disposed {
-		return nil, ErrDisposed
+		return zero, ErrDisposed
 	}
 
 	peekItem, ok := q.items.peek()
 	if !ok {
-		return nil, ErrEmptyQueue
+		return zero, ErrEmptyQueue
 	}
 
 	return peekItem, nil
@@ -290,7 +295,7 @@ func (q *Queue) Peek() (interface{}, error) {
 // TakeUntil takes a function and returns a list of items that
 // match the checker until the checker returns false.  This does not
 // wait if there are no items in the queue.
-func (q *Queue) TakeUntil(checker func(item interface{}) bool) ([]interface{}, error) {
+func (q *Queue[T]) TakeUntil(checker func(item T) bool) ([]T, error) {
 	if checker == nil {
 		return nil, nil
 	}
@@ -308,7 +313,7 @@ func (q *Queue) TakeUntil(checker func(item interface{}) bool) ([]interface{}, e
 }
 
 // Empty returns a bool indicating if this bool is empty.
-func (q *Queue) Empty() bool {
+func (q *Queue[T]) Empty() bool {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
@@ -316,7 +321,7 @@ func (q *Queue) Empty() bool {
 }
 
 // Len returns the number of items in this queue.
-func (q *Queue) Len() int64 {
+func (q *Queue[T]) Len() int64 {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
@@ -325,7 +330,7 @@ func (q *Queue) Len() int64 {
 
 // Disposed returns a bool indicating if this queue
 // has had disposed called on it.
-func (q *Queue) Disposed() bool {
+func (q *Queue[T]) Disposed() bool {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
@@ -335,7 +340,7 @@ func (q *Queue) Disposed() bool {
 // Dispose will dispose of this queue and returns
 // the items disposed. Any subsequent calls to Get
 // or Put will return an error.
-func (q *Queue) Dispose() []interface{} {
+func (q *Queue[T]) Dispose() []T {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
@@ -359,9 +364,9 @@ func (q *Queue) Dispose() []interface{} {
 }
 
 // New is a constructor for a new threadsafe queue.
-func New(hint int64) *Queue {
-	return &Queue{
-		items: make([]interface{}, 0, hint),
+func New[T any](hint int64) *Queue[T] {
+	return &Queue[T]{
+		items: make([]T, 0, hint),
 	}
 }
 
@@ -369,7 +374,7 @@ func New(hint int64) *Queue {
 // with each item in the queue until the queue is exhausted.  When the queue
 // is exhausted execution is complete and all goroutines will be killed.
 // This means that the queue will be disposed so cannot be used again.
-func ExecuteInParallel(q *Queue, fn func(interface{})) {
+func ExecuteInParallel(q *Queue[interface{}], fn func(interface{})) {
 	if q == nil {
 		return
 	}
