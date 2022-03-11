@@ -23,17 +23,17 @@ import (
 )
 
 func TestAddDuplicateItem(t *testing.T) {
-	set := New()
+	set := New[string]()
 	set.Add(`test`)
 	set.Add(`test`)
 
-	if !reflect.DeepEqual([]interface{}{`test`}, set.Flatten()) {
+	if !reflect.DeepEqual([]string{`test`}, set.Flatten()) {
 		t.Errorf(`Incorrect result returned: %+v`, set.Flatten())
 	}
 }
 
 func TestAddItems(t *testing.T) {
-	set := New()
+	set := New[string]()
 	set.Add(`test`)
 	set.Add(`test1`)
 
@@ -41,9 +41,9 @@ func TestAddItems(t *testing.T) {
 	secondSeen := false
 	// order is not guaranteed
 	for _, item := range set.Flatten() {
-		if item.(string) == `test` {
+		if item == `test` {
 			firstSeen = true
-		} else if item.(string) == `test1` {
+		} else if item == `test1` {
 			secondSeen = true
 		}
 	}
@@ -54,17 +54,17 @@ func TestAddItems(t *testing.T) {
 }
 
 func TestRemove(t *testing.T) {
-	set := New()
+	set := New[string]()
 	set.Add(`test`)
 	set.Remove(`test`)
 
-	if !reflect.DeepEqual([]interface{}{}, set.Flatten()) {
+	if !reflect.DeepEqual([]string{}, set.Flatten()) {
 		t.Errorf(`Incorrect result returned: %+v`, set.Flatten())
 	}
 }
 
 func TestExists(t *testing.T) {
-	set := New()
+	set := New[string]()
 	set.Add(`test`)
 
 	if !set.Exists(`test`) {
@@ -93,7 +93,7 @@ func TestExists_WithNewItems(t *testing.T) {
 }
 
 func TestLen(t *testing.T) {
-	set := New()
+	set := New[string]()
 	set.Add(`test`)
 
 	if set.Len() != 1 {
@@ -107,7 +107,7 @@ func TestLen(t *testing.T) {
 }
 
 func TestFlattenCaches(t *testing.T) {
-	set := New()
+	set := New[string]()
 	item := `test`
 	set.Add(item)
 
@@ -119,7 +119,7 @@ func TestFlattenCaches(t *testing.T) {
 }
 
 func TestFlattenCaches_CacheReturn(t *testing.T) {
-	set := New()
+	set := New[string]()
 	item := `test`
 	set.Add(item)
 
@@ -132,7 +132,7 @@ func TestFlattenCaches_CacheReturn(t *testing.T) {
 }
 
 func TestAddClearsCache(t *testing.T) {
-	set := New()
+	set := New[string]()
 	item := `test`
 	set.Add(item)
 	set.Flatten()
@@ -152,7 +152,7 @@ func TestAddClearsCache(t *testing.T) {
 }
 
 func TestDeleteClearsCache(t *testing.T) {
-	set := New()
+	set := New[string]()
 	item := `test`
 	set.Add(item)
 	set.Flatten()
@@ -165,7 +165,7 @@ func TestDeleteClearsCache(t *testing.T) {
 }
 
 func TestAll(t *testing.T) {
-	set := New()
+	set := New[string]()
 	item := `test`
 	set.Add(item)
 
@@ -183,7 +183,7 @@ func TestAll(t *testing.T) {
 }
 
 func TestClear(t *testing.T) {
-	set := New()
+	set := New[string]()
 	set.Add(`test`)
 
 	set.Clear()
@@ -194,7 +194,7 @@ func TestClear(t *testing.T) {
 }
 
 func BenchmarkFlatten(b *testing.B) {
-	set := New()
+	set := New[string]()
 	for i := 0; i < 50; i++ {
 		item := strconv.Itoa(i)
 		set.Add(item)
@@ -207,7 +207,7 @@ func BenchmarkFlatten(b *testing.B) {
 }
 
 func BenchmarkLen(b *testing.B) {
-	set := New()
+	set := New[string]()
 	for i := 0; i < 50; i++ {
 		item := strconv.Itoa(i)
 		set.Add(item)
@@ -220,7 +220,7 @@ func BenchmarkLen(b *testing.B) {
 }
 
 func BenchmarkExists(b *testing.B) {
-	set := New()
+	set := New[int]()
 	set.Add(1)
 
 	b.ResetTimer()
@@ -230,7 +230,7 @@ func BenchmarkExists(b *testing.B) {
 }
 
 func BenchmarkClear(b *testing.B) {
-	set := New()
+	set := New[int]()
 	for i := 0; i < b.N; i++ {
 		set.Clear()
 	}
