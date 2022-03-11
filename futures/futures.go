@@ -31,7 +31,7 @@ import (
 
 // Completer is a channel that the future expects to receive
 // a result on.  The future only receives on this channel.
-type Completer <-chan interface{}
+type Completer[T any] <-chan T
 
 // Future represents an object that can be used to perform asynchronous
 // tasks.  The constructor of the future will complete it, and listeners
@@ -39,9 +39,9 @@ type Completer <-chan interface{}
 // from a channel in that the future is only completed once, and anyone
 // listening on the future will get the result, regardless of the number
 // of listeners.
-type Future struct {
+type Future[T any] struct {
 	triggered bool // because item can technically be nil and still be valid
-	item      interface{}
+	item      T
 	err       error
 	lock      sync.Mutex
 	wg        sync.WaitGroup
@@ -49,7 +49,7 @@ type Future struct {
 
 // GetResult will immediately fetch the result if it exists
 // or wait on the result until it is ready.
-func (f *Future) GetResult() (interface{}, error) {
+func (f *Future[T]) GetResult() (T, error) {
 	f.lock.Lock()
 	if f.triggered {
 		f.lock.Unlock()
@@ -62,14 +62,14 @@ func (f *Future) GetResult() (interface{}, error) {
 }
 
 // HasResult will return true iff the result exists
-func (f *Future) HasResult() bool {
+func (f *Future[T]) HasResult() bool {
 	f.lock.Lock()
 	hasResult := f.triggered
 	f.lock.Unlock()
 	return hasResult
 }
 
-func (f *Future) setItem(item interface{}, err error) {
+func (f *Future[T]) setItem(item T, err error) {
 	f.lock.Lock()
 	f.triggered = true
 	f.item = item
@@ -78,7 +78,7 @@ func (f *Future) setItem(item interface{}, err error) {
 	f.wg.Done()
 }
 
-func listenForResult(f *Future, ch Completer, timeout time.Duration, wg *sync.WaitGroup) {
+func listenForResult[T any](f *Future[T], ch Completer[T], timeout time.Duration, wg *sync.WaitGroup) {
 	wg.Done()
 	t := time.NewTimer(timeout)
 	select {
@@ -86,7 +86,8 @@ func listenForResult(f *Future, ch Completer, timeout time.Duration, wg *sync.Wa
 		f.setItem(item, nil)
 		t.Stop() // we want to trigger GC of this timer as soon as it's no longer needed
 	case <-t.C:
-		f.setItem(nil, fmt.Errorf(`timeout after %f seconds`, timeout.Seconds()))
+		var zero T
+		f.setItem(zero, fmt.Errorf(`timeout after %f seconds`, timeout.Seconds()))
 	}
 }
 
@@ -94,8 +95,8 @@ func listenForResult(f *Future, ch Completer, timeout time.Duration, wg *sync.Wa
 // item to the toComplete channel and any listeners will get
 // notified.  If timeout is hit before toComplete is called,
 // any listeners will get passed an error.
-func New(completer Completer, timeout time.Duration) *Future {
-	f := &Future{}
+func New[T any](completer Completer[T], timeout time.Duration) *Future[T] {
+	f := &Future[T]{}
 	f.wg.Add(1)
 	var wg sync.WaitGroup
 	wg.Add(1)
