@@ -19,7 +19,7 @@ package hilbert
 import (
 	"sort"
 
-	"github.com/Workiva/go-datastructures/rtree"
+	"github.com/lemon-mint/go-datastructures/rtree"
 )
 
 type hilbert int64

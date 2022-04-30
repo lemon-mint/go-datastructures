@@ -23,7 +23,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Workiva/go-datastructures/rangetree"
+	"github.com/lemon-mint/go-datastructures/rangetree"
 )
 
 func generateMultiDimensionalEntries(num int) rangetree.Entries {

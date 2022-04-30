@@ -21,7 +21,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/Workiva/go-datastructures/rtree"
+	"github.com/lemon-mint/go-datastructures/rtree"
 )
 
 type actions []action

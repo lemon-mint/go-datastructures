@@ -16,7 +16,7 @@ limitations under the License.
 
 package yfast
 
-import "github.com/Workiva/go-datastructures/trie/xfast"
+import "github.com/lemon-mint/go-datastructures/trie/xfast"
 
 // iteratorExhausted is a magic value for an index to tell us
 // that the iterator has been exhausted.

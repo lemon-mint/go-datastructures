@@ -21,7 +21,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/Workiva/go-datastructures/common"
+	"github.com/lemon-mint/go-datastructures/common"
 )
 
 type actions []action

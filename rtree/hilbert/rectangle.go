@@ -16,7 +16,7 @@ limitations under the License.
 
 package hilbert
 
-import "github.com/Workiva/go-datastructures/rtree"
+import "github.com/lemon-mint/go-datastructures/rtree"
 
 type rectangle struct {
 	xlow, xhigh, ylow, yhigh int32

@@ -19,7 +19,7 @@ package mock
 import (
 	"github.com/stretchr/testify/mock"
 
-	"github.com/Workiva/go-datastructures/batcher"
+	"github.com/lemon-mint/go-datastructures/batcher"
 )
 
 var _ batcher.Batcher = new(Batcher)

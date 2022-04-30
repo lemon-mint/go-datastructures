@@ -15,7 +15,7 @@ limitations under the License.
 */
 package palm
 
-import "github.com/Workiva/go-datastructures/common"
+import "github.com/lemon-mint/go-datastructures/common"
 
 type mockKey int
 

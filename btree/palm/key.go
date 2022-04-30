@@ -16,7 +16,7 @@ limitations under the License.
 
 package palm
 
-import "github.com/Workiva/go-datastructures/common"
+import "github.com/lemon-mint/go-datastructures/common"
 
 func reverseKeys(cmps common.Comparators) common.Comparators {
 	reversed := make(common.Comparators, len(cmps))

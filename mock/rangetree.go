@@ -3,7 +3,7 @@ package mock
 import (
 	"github.com/stretchr/testify/mock"
 
-	"github.com/Workiva/go-datastructures/rangetree"
+	"github.com/lemon-mint/go-datastructures/rangetree"
 )
 
 type RangeTree struct {

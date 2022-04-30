@@ -23,7 +23,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Workiva/go-datastructures/slice"
+	"github.com/lemon-mint/go-datastructures/slice"
 )
 
 func checkTrie(t *testing.T, xft *XFastTrie) {

@@ -1,4 +1,4 @@
-module github.com/Workiva/go-datastructures
+module github.com/lemon-mint/go-datastructures
 
 go 1.18
 

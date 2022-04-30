@@ -16,7 +16,7 @@ limitations under the License.
 
 package skip
 
-import "github.com/Workiva/go-datastructures/common"
+import "github.com/lemon-mint/go-datastructures/common"
 
 const iteratorExhausted = -2
 

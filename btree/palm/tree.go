@@ -22,8 +22,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/Workiva/go-datastructures/common"
-	"github.com/Workiva/go-datastructures/queue"
+	"github.com/lemon-mint/go-datastructures/common"
+	"github.com/lemon-mint/go-datastructures/queue"
 )
 
 type operation int

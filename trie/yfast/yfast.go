@@ -36,7 +36,7 @@ aid in multithreading these functions for performance optimization.
 */
 package yfast
 
-import "github.com/Workiva/go-datastructures/trie/xfast"
+import "github.com/lemon-mint/go-datastructures/trie/xfast"
 
 // YFastTrie implements all the methods available to the y-fast
 // trie datastructure.  The top half is composed of an x-fast trie

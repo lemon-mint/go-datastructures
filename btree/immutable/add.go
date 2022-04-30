@@ -21,7 +21,7 @@ import (
 	"sort"
 	"sync"
 
-	terr "github.com/Workiva/go-datastructures/threadsafe/err"
+	terr "github.com/lemon-mint/go-datastructures/threadsafe/err"
 )
 
 func (t *Tr) AddItems(its ...*Item) ([]*Item, error) {

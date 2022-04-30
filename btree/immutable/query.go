@@ -20,7 +20,7 @@ import (
 	"runtime"
 	"sync"
 
-	terr "github.com/Workiva/go-datastructures/threadsafe/err"
+	terr "github.com/lemon-mint/go-datastructures/threadsafe/err"
 )
 
 func (t *Tr) Apply(fn func(item *Item), keys ...interface{}) error {

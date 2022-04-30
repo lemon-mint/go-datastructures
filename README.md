@@ -194,13 +194,13 @@ target is O(n). For more details see [wikipedia](https://en.wikipedia.org/wiki/G
 ### Installation
 
  1. Install Go 1.3 or higher.
- 2. Run `go get github.com/Workiva/go-datastructures/...`
+ 2. Run `go get github.com/lemon-mint/go-datastructures/...`
 
 ### Updating
 
 When new code is merged to master, you can use
 
-	go get -u github.com/Workiva/go-datastructures/...
+	go get -u github.com/lemon-mint/go-datastructures/...
 
 To retrieve the latest version of go-datastructures.
 
@@ -208,7 +208,7 @@ To retrieve the latest version of go-datastructures.
 
 To run all the unit tests use these commands:
 
-	cd $GOPATH/src/github.com/Workiva/go-datastructures
+	cd $GOPATH/src/github.com/lemon-mint/go-datastructures
 	go get -t -u ./...
 	go test ./...
 

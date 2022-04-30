@@ -25,7 +25,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Workiva/go-datastructures/common"
+	"github.com/lemon-mint/go-datastructures/common"
 )
 
 func checkTree(t testing.TB, tree *ptree) bool {

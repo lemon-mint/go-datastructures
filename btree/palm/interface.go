@@ -45,7 +45,7 @@ BenchmarkExecuteQuery-8	   				   10000	   1290732 ns/op
 */
 package palm
 
-import "github.com/Workiva/go-datastructures/common"
+import "github.com/lemon-mint/go-datastructures/common"
 
 // BTree is the interface returned from this package's constructor.
 type BTree interface {

@@ -25,7 +25,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Workiva/go-datastructures/rtree"
+	"github.com/lemon-mint/go-datastructures/rtree"
 )
 
 func getConsoleLogger() *log.Logger {

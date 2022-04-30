@@ -20,8 +20,8 @@ import (
 	"runtime"
 	"sync"
 
-	h "github.com/Workiva/go-datastructures/numerics/hilbert"
-	"github.com/Workiva/go-datastructures/rtree"
+	h "github.com/lemon-mint/go-datastructures/numerics/hilbert"
+	"github.com/lemon-mint/go-datastructures/rtree"
 )
 
 func getCenter(rect rtree.Rectangle) (int32, int32) {
